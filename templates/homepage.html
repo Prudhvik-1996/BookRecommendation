@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block body %}
+	<style type="text/css">
+		.card {
+		  /* Add shadows to create the "card" effect */
+		  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+		  transition: 0.3s;
+		  width: 150px;
+		  height: 100%;
+		}
+
+		/* On mouse-over, add a deeper shadow */
+		.card:hover {
+		  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+		}
+
+	</style>
+
+	<h2>{{message}}</h2>
+	<h1>Books!!!!</h1>
+	<br>
+	{% if recommendationData|length > 0 %}
+		{% for eachGenre in recommendationData %}
+			{% for eachBook in eachGenre %}
+				<div class="card">
+					<img src="{{eachBook.image_url}}" alt="Avatar" height="150" width="100" style="text-align: center"><br>
+					<h5>Book Title:</h5>{{eachBook.original_title}}<br>
+					<h5>Authors:</h5>{{eachBook.authors}}
+				</div><br><br>
+			{% endfor %}
+			<br>
+			<br>
+		{% endfor %}
+	{% endif %}
+{% endblock %}

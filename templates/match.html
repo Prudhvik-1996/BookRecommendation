@@ -1,0 +1,285 @@
+{% extends "layout.html" %}
+{% block body %}
+<style>
+	table {
+	font-family: arial, sans-serif;
+	border-collapse: collapse;
+	width: 100%;
+	}
+	td, th {
+	border: 1px solid #dddddd;
+	text-align: left;
+	padding: 8px;
+	}
+	tr:nth-child(even) {
+	background-color: #dddddd;
+	}
+</style>
+
+	{% for match in matches %}
+		{% if match.mchstate != "preview" %}
+			{% if match.id == id %}
+				
+				<div class="col-md-12">
+					<!-- <h3>Match ID: {{c.scorecard(match['id'])['matchinfo']['id']}}</h3> -->
+					<h2>Match - Series: {{c.scorecard(match['id'])['matchinfo']['mchdesc']}} - {{c.scorecard(match['id'])['matchinfo']['srs']}}</h2>
+					<h3>Status: {{c.scorecard(match['id'])['matchinfo']['status']}}</h3>
+				
+					<div class="col-md-12">
+						<h2>LeaderBoard</h2>
+						<table>
+							<tr>
+								<th>Name</th>
+								<td>Points</td>
+							</tr>
+							{% for i in leaderboard %}
+							<tr>
+								<th>{{i.email}}</th>
+								<td>{{i.points}}</td>
+							</tr>
+						<!-- {{i}} -->
+							{% endfor %}	
+						</table>
+						<!-- {{leaderboard}} -->
+						<br><br>
+					</div>
+					
+					{% if team|length != 0 %}
+					<h1>Your Team</h1>
+					<table>
+						<tr>
+							<th>Player Name</th>
+							<th>Points</th>
+						</tr>
+						<tr>
+							<td>{{team[0].player1}}</td>
+							<td>{{team[0].player1score}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player2}}</td>
+							<td>{{team[0].player2score}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player3}}</td>
+							<td>{{team[0].player3score}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player4}}</td>
+							<td>{{team[0].player4score}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player5}}</td>
+							<td>{{team[0].player5score}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player6}}</td>
+							<td>{{team[0].player6score}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player7}}</td>
+							<td>{{team[0].player7score}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player8}}</td>
+							<td>{{team[0].player8score}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player9}}</td>
+							<td>{{team[0].player9score}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player10}}</td>
+							<td>{{team[0].player10score}}</td>
+						</tr>
+						<tr>
+							<td>Power player points: {{team[0].powerplayer}}</td>
+							<td>{{team[0].ppscore}}</td>
+						</tr>
+					</table>
+					{% endif %}
+
+					{% for team in c.scorecard(match['id'])['scorecard'] %}
+						<h3>
+							{{team['batteam']}}: {{team['runs']}} - {{team['wickets']}} <br> 
+							Overs: {{team['overs']}} <br> 
+							Run-rate: {{team['runrate']}}
+						</h3>
+						<h3>Score card:</h3>
+						<h4>Batting: </h4>
+						<table>
+							<tr>
+								<th>Name</th>
+								<td>Runs</td>
+								<td>Balls</td>
+								<td>Fours</td>
+								<td>Sixes</td>
+								<td>Dismissal</td>
+							</tr>
+							{% for individual in team['batcard'] %}
+								<tr>
+									<th><a href="https://www.google.com/search?q=cricketer {{individual['name']}}" target="_blank">{{individual['name']}}</a></th>
+									<td>{{individual['runs']}}</td>
+									<td>{{individual['balls']}}</td>
+									<td>{{individual['fours']}}</td>
+									<td>{{individual['six']}}</td>
+									<td>{{individual['dismissal']}}</td>
+								</tr>
+							{% endfor %}
+						</table>
+						<br>
+						<h4>Bowling: </h4>
+						<table>
+							<tr>
+								<th>Name</th>
+								<td>Overs</td>
+								<td>Maidens</td>
+								<td>Runs</td>
+								<td>Wickets</td>
+							</tr>
+							{% for individual in team['bowlcard'] %}
+								<tr>
+									<th><a href="https://www.google.com/search?q=cricketer {{individual['name']}}" target="_blank">{{individual['name']}}</a></th>
+									<td>{{individual['overs']}}</td>
+									<td>{{individual['maidens']}}</td>
+									<td>{{individual['runs']}}</td>
+									<td>{{individual['wickets']}}</td>
+								</tr>
+							{% endfor %}	
+						</table>
+						<br>
+					{% endfor %}
+				</div>
+				<h3 class="col-md-12">Squad: </h3>
+				{% for squad in c.scorecard(match['id'])['squad'] %}
+					<div class="col-md-6">
+						<h4>Team: {{squad['team']}}</h4>
+						{% for member in squad['members'] %}
+							<a href="https://www.google.com/search?q=cricketer {{member}}" target="_blank">{{member}}</a><br> 
+						{% endfor %}
+					</div>
+				{% endfor %}
+				<script type="text/javascript">setTimeout(function(){location.reload();}, 10000);</script>
+			{% endif %}			
+
+			<!-- {% if match.mchstate != "preview" %}
+			<script type="text/javascript">setTimeout(function(){location.reload();}, 10000);</script>
+			{% endif %} -->
+		{% else %}
+			{% if match.id == id %}
+				{% if team|length == 0 %}
+				<div class="col-md-12">
+					<form action="http://192.168.43.202:8001/createdreamteam/{{c.scorecard(match['id'])['matchinfo']['mchdesc']}} - {{c.commentary(match['id'])['matchinfo']['srs']}} {{match.mnum}}" method="post">
+						<!-- <h5>{{match}}</h5> -->
+						<h2>Match - Series: {{c.scorecard(match['id'])['matchinfo']['mchdesc']}} - {{c.commentary(match['id'])['matchinfo']['srs']}}</h2>
+						<h3>Status: {{c.scorecard(match['id'])['matchinfo']['status']}}</h3>
+						{% set team1 = c.commentary(match['id'])['commentary'][(c.commentary(match['id'])['commentary'])|length -2].split(':') %}
+						
+						<h4>Select your own team and get points according to how your players score in actual match.</h4>
+						<h4>You can select only 10 players from both the teams not more than 7 from a team</h4>
+
+						{% set teamMembers1 = team1[1].split(',') %}
+						<div class="col-md-6">
+							<h3>{{team1[0]}}</h3>
+							{% for i in teamMembers1 %}
+							<input type="checkbox" class="fiveinteamOne totalselected" name="Team1" value="{{i}}">
+							<a href="https://www.google.com/search?q=cricketer {{i}}" target="_blank">{{i}}</a><br> 
+							{% endfor %}
+							<script type="text/javascript">
+								$('.fiveinteamOne').on('change', function() {
+								if($('.fiveinteamOne:checked').length > 7) {
+									this.checked = false;
+								}
+							});
+							</script>
+						</div>
+						{% set team2 = c.commentary(match['id'])['commentary'][(c.commentary(match['id'])['commentary'])|length -1].split(':') %}
+						{% set teamMembers2 = team2[1].split(',') %}
+						<div class="col-md-6">
+							<h3>{{team2[0]}}</h3>
+							{% for i in teamMembers2 %}
+							<input type="checkbox" class="fiveinteamTwo totalselected" name="Team2" value="{{i}}">
+							<a href="https://www.google.com/search?q=cricketer {{i}}" target="_blank">{{i}}</a><br> 
+							{% endfor %}
+							<script type="text/javascript">
+								$('.fiveinteamTwo').on('change', function() {
+								if($('.fiveinteamTwo:checked').length > 7) {
+									this.checked = false;
+								}
+							});
+							</script>
+						</div>
+      					<script type="text/javascript">
+							$('.totalselected').on('change', function() {
+							if($('.totalselected:checked').length > 10) {
+								this.checked = false;
+							}
+							if($('.totalselected:checked').length == 10) {
+								document.getElementById("cansubmit").disabled = false;
+							}
+						});
+						</script>
+      			
+      			<dd><br><br><input id="cansubmit" type="submit" value="Submit" disabled></dd>
+  					<!-- <script type="text/javascript">
+							if($('.totalselected:checked').length == 10) {
+								document.getElementById("cansubmit").disabled = true;
+							}
+  					</script> -->
+						<!-- <h5>{{c.commentary(match['id'])['commentary'][1]}}</h5> -->
+						<!-- <h5>{{c.commentary(match['id'])['commentary'][2]}}</h5> -->	
+					</form>
+				</div>
+				{% else %}
+				<h2>Match - Series: {{c.scorecard(match['id'])['matchinfo']['mchdesc']}} - {{c.commentary(match['id'])['matchinfo']['srs']}}</h2>
+						
+				<div class="col-md-12">
+					<h1>Your Team</h1>
+					{% if team|length == 0 %}
+					<h5>You don't have any team</h5>
+					{% else %}
+					<table>
+						<tr>
+							<th>Player Name</th>
+						</tr>
+						<tr>
+							<td>{{team[0].player1}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player2}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player3}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player4}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player5}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player6}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player7}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player8}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player9}}</td>
+						</tr>
+						<tr>
+							<td>{{team[0].player10}}</td>
+						</tr>
+						<tr>
+							<td>Power player points: {{team[0].powerplayer}}</td>
+						</tr>
+					</table>
+					{% endif %}
+				</div>
+				{% endif %}
+			{% endif %}
+		{% endif %}
+	{% endfor %}
+	
+{% endblock %}

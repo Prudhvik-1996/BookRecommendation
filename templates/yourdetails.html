@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block body %}
+<br>
+<br>
+<br>
+<div class="row col-md-12 well" style="background-color: rgba(245, 245, 245, 0.8);">
+	<h2 class="row" style="text-align: center;">Your details</h2>
+</div>	
+<div class="row col-md-12 well" style="font-size: 20px; background-color: rgba(245, 245, 245, 0.8);">
+	<p>Name: {{customer.name}}</p>
+	<p>Email address: {{customer.email}}</p>
+	<p>Contact number: {{customer.phone}}</p>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% block body %}
+	<h2>Signup</h2>
+	{% if error %}<p class="error"><strong>Error:</strong> {{ error }}{% endif %}
+	<form action="{{ url_for('signup') }}" method="post">
+		<table>
+			
+			<tr>
+				<th>
+					<dl>
+					<dt>Email id:</dt>
+			        <dd><input type="email" name="email" required></dd>
+			    </th>
+			    <th>
+		            <dt>Name:</dt>
+			        <dd><input type="text" name="name" required></dd>
+			    </th>
+			    <th>
+			        <dt>Mobile number:</dt>
+			        <dd><input type="text" name="phone" required></dd>
+		        </th>
+		        <th>
+		        	<label>
+		        		<dt>Password:</dt>
+				        <dd><input type="password" id="password" name="password" required></dd>
+		        	</label>
+		        </th>
+		        <th>
+		        	<label>
+		        		<dt>Re-enter password:</dt>
+				        <dd><input type="password" id="confirm_password" name="confirm_password" required></dd>	
+		        	</label>
+		        </th>
+			</tr>
+
+		</table>
+
+			<br>
+			<dt>Select your favourite genres:</dt><br>
+
+		<table>
+			<tr>
+	            <th>
+		            <dt>Genre 1</dt>
+			        <input type="text" name="interestedGenres1" list="hosting-plan" required>
+			    </th>
+			    <th>
+		            <dt>Genre 2</dt>
+			        <input type="text" name="interestedGenres2" list="hosting-plan" required>
+			    </th>
+			    <th>
+		            <dt>Genre 3</dt>
+			        <input type="text" name="interestedGenres3" list="hosting-plan" required>
+			    </th>
+			    <th>
+		            <dt>Genre 4</dt>
+			        <input type="text" name="interestedGenres4" list="hosting-plan" required>
+			    </th>
+			    <th>
+		            <dt>Genre 5</dt>
+			        <input type="text" name="interestedGenres5" list="hosting-plan" required>
+			    </th>
+
+			</tr>
+
+		</table>
+
+	        <br><br>
+	        <dd><input type="submit" value="Login"></dd>
+
+		</dl>
+	</form>
+
+<datalist id="hosting-plan">
+	<option value="Horror"/>
+	<option value="Comedy"/>
+	<option value="Romance"/>
+	<option value="Thriller"/>
+	<option value="Fantasy"/>
+</datalist>
+
+{% endblock %}
