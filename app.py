@@ -109,17 +109,18 @@ class LoginDetails(db.Model):
     name = db.Column(db.String(200))
     password = db.Column(db.String(240))
     phone = db.Column(db.String(20))
-    createdAt = db.Column(DateTime(), default=datetime.datetime.now)
-    lastSignIn = db.Column(DateTime(),  nullable=True)
+    createdAt = db.Column(DateTime(), default=datetime.datetime.now())
+    lastSignIn = db.Column(DateTime(), default=datetime.datetime.now())
 
-    def __init__(self, name, email, phone, password):
+    def __init__(self, name, email, phone, password, createdAt=datetime.datetime.now(), lastSignIn = datetime.datetime.now()):
         self.email = email
         self.name = name
         self.password = password
         self.phone = phone
+        self.createdAt = createdAt
 
     def __repr__(self):
-        return '<Entry\nEmail Id: %r\nName: %r\nPassword: %r\nPhone number: %r\n>' % (self.email, self.name, self.password, self.phone)
+        return '<Entry\nEmail Id: %r\nName: %r\nPassword: %r\nPhone number: %r\nCreatedAt: %r>' % (self.email, self.name, self.password, self.phone, self.createdAt)
 
 class Interests(db.Model):
     """docstring for Interests"""
@@ -147,6 +148,8 @@ def authenticate(e, p):
     details=LoginDetails.query.filter_by(email=e).all()
     if(len(details)>0):
         if details[0].password==p:
+            details[0].lastSignIn = datetime.datetime.now()
+            db.session.commit()
             return ""
         else: return "Incorrect Password"
     return "No Email exists"
@@ -157,10 +160,14 @@ def authenticateEmail(e):
         return False
     return True
 
-def updateLastLoggedIn(email):
-    
-    # details=LoginDetails.query.filter_by(email=e).all()
-    # if details[0].lastSignIn 
+def checkLastLoggedIn(e):
+    details=LoginDetails.query.filter_by(email=e).all()[0]
+    newSignIn = datetime.datetime.now()
+    timeDiff = newSignIn - details.lastSignIn
+
+    if timeDiff <= datetime.timedelta(1, 0, 0, 0):
+        logout()
+
     return None
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -173,7 +180,6 @@ def login():
         if error=="":
             session['logged_in'] = True
             session['log_email'] = request.form['email']
-            updateLastLoggedIn(email)
             flash("You are logged in")
             return redirect(url_for('homepage'))
         return render_template('login.html', error=error)
@@ -230,6 +236,7 @@ def signup():
     
 @app.route('/yourdetails')
 def yourdetails():
+    checkLastLoggedIn(session['log_email'])
     try:
         if session['logged_in']==True:
             customer = LoginDetails.query.filter_by(email=session['log_email']).one()
@@ -271,6 +278,7 @@ def getBookByName(name):
 
 @app.route('/book/<string:bookName>', methods=['GET'])
 def getBookDetailsByName(bookName):
+    checkLastLoggedIn(session['log_email'])
     try:
         if session['logged_in']==True:
             bookDetails = json.loads(getBookByName(bookName))
