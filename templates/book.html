@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<style type="text/css">
+  .checked {
+	color: orange;
+  }
+  .myListButton {background-color: #555555; color: white;}
+
+	.card {
+	  /* Add shadows to create the "card" effect */
+	  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+	  transition: 0.3s;
+	  width: 150px;
+	  height: 100%;
+	}
+
+	/* On mouse-over, add a deeper shadow */
+	.card:hover {
+	  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+	}
+
+	.details {
+	  width: 150px;
+	  height: 120px;
+	  overflow: scroll;
+	}
+
+	.horizontal {
+	    width: 100%;
+	    height: 400px;
+	    overflow: auto;
+	}
+</style>
+
+
+{% if bookDetails.list|length > 0 %}
+
+	<div class="row">
+	  <div class="col-sm-3">
+		<img src="{{bookDetails.image_url}}" height="200" width="150" style="text-align: center">
+	  </div>
+	  <div class="col-sm-7">
+		<h2>{{bookDetails.title}}</h2><br>
+		ISBN Number: {{bookDetails.isbn}}<br>
+		Original Publication Year: {{bookDetails.original_publication_year}}
+	  </div>
+	  <div class="col-sm-2">
+		<button class="button myListButton">+ My List</button>
+
+		
+	  </div>
+	</div>
+	<br>
+	<div class="row">
+	  <div class="col-md-3">
+		Authors:{{bookDetails.authors}}
+	  </div>
+	  <div class="col-md-3">
+		Rating:<br>
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star checked"></span>
+		{{bookDetails.ratings_5}}<br>
+
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star"></span>
+		{{bookDetails.ratings_4}}<br>
+
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star"></span>
+		<span class="fa fa-star"></span>
+		{{bookDetails.ratings_3}}<br>
+	  
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star"></span>
+		<span class="fa fa-star"></span>
+		<span class="fa fa-star"></span>
+		{{bookDetails.ratings_2}}<br>
+
+		<span class="fa fa-star checked"></span>
+		<span class="fa fa-star"></span>
+		<span class="fa fa-star"></span>
+		<span class="fa fa-star"></span>
+		<span class="fa fa-star"></span>
+		{{bookDetails.ratings_1}}<br>
+
+
+	  </div>
+	</div>
+{% else %}
+<h2>
+	Sorry, Book not found, alternatively you can read more about it 
+	<a href="https://www.google.com/search?tbm=bks&q={{ bookDetails.title }}"> here</a>...
+</h2>
+{% endif %}
+
+
+{% if recommendations|length > 0 %}
+	{% for eachCategory in recommendations %}
+		<h4>{{eachCategory.category}}</h4>
+		<div class="horizontal">
+			<table>
+				<tr>
+					{% for eachBook in eachCategory.list %}
+					<th style="text-align: left; padding: 8px;">
+						<a href="/book/{{eachBook.original_title}}">
+							<div class="card">
+								<img src="{{eachBook.image_url}}" alt="Avatar" height="200" width="150" style="text-align: center"><br>
+								<div class="details">
+									<p><h5>Book Title:</h5>{{eachBook.original_title}}</p>
+									<p><h5>Authors:</h5>{{eachBook.authors}}</p>
+								</div>
+							</div>
+						</a>
+					</th>
+					{% endfor %}
+				</tr>
+			</table>
+		</div>
+	{% endfor %}
+{% endif %}
+
+
+
+{% endblock %}

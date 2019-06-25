@@ -4,6 +4,8 @@ import requests
 import io
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Table, DateTime, desc
+import datetime
+import random
 
 app = Flask(__name__)
 
@@ -74,10 +76,11 @@ indices = pd.Series(books.index, index=books['title'])
 def authors_recommendations(title):
     idx = indices[title]
     sim_scores = list(enumerate(cosine_sim_authors[idx]))
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    # sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    random.shuffle(sim_scores)
     sim_scores = sim_scores[1:21]
     book_indices = [i[0] for i in sim_scores]
-    return titles.iloc[book_indices]
+    return titles.loc[book_indices]
 
 # print(authors_recommendations('The Hobbit'))
 
@@ -93,10 +96,11 @@ cosine_sim_genres = linear_kernel(tfidf_matrix_genres, tfidf_matrix_genres)
 def genres_recommendations(title):
     idx = indices[title]
     sim_scores = list(enumerate(cosine_sim_genres[idx]))
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    # sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    random.shuffle(sim_scores)
     sim_scores = sim_scores[1:21]
     book_indices = [i[0] for i in sim_scores]
-    return titles.iloc[book_indices]
+    return titles.loc[book_indices]
 # print(genres_recommendations('The Hobbit'))
 
 # related to database
@@ -105,6 +109,8 @@ class LoginDetails(db.Model):
     name = db.Column(db.String(200))
     password = db.Column(db.String(240))
     phone = db.Column(db.String(20))
+    createdAt = db.Column(DateTime(), default=datetime.datetime.now)
+    lastSignIn = db.Column(DateTime(),  nullable=True)
 
     def __init__(self, name, email, phone, password):
         self.email = email
@@ -151,15 +157,20 @@ def authenticateEmail(e):
         return False
     return True
 
+def updateLastLoggedIn(email):
+    return None
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
     if request.method == 'POST':
-        error = (authenticate(request.form['email'], request.form['password']))
+        email = request.form['email']
+        password = request.form['password']
+        error = (authenticate(email, password))
         if error=="":
             session['logged_in'] = True
             session['log_email'] = request.form['email']
+            updateLastLoggedIn(email)
             flash("You are logged in")
             return redirect(url_for('homepage'))
         return render_template('login.html', error=error)
@@ -224,7 +235,7 @@ def yourdetails():
     except:
         return redirect(url_for('login'))
 
-@app.route('/getAllBooks', methods=['GET', 'POST'])
+# @app.route('/getAllBooks', methods=['GET', 'POST'])
 def getAllBooks():
     for book in json.loads(books.to_json(orient='table'))['data']:
         if str(name).strip().lower() in str(book["title"]).strip().lower():
@@ -235,50 +246,98 @@ def getAllBooks():
 def test(bookName):
     return bookName
 
-@app.route('/recommend/author/<string:bookName>/', methods=['GET'])
-def getBooksWithAuthor(bookName):
-    return json.dumps(json.loads(authors_recommendations(bookName).to_json(orient='table'))['data'])
+# @app.route('/recommend/author/<string:bookName>/', methods=['GET'])
+def getBooksWithAuthor(bookName, start = 0, end = 10):
+    return json.dumps(json.loads(authors_recommendations(bookName).to_json(orient='table'))['data'][start:end])
 
-@app.route('/recommend/genre/<string:bookName>/', methods=['GET'])
-def getBooksWithGenre(bookName):
-    return json.dumps(json.loads(genres_recommendations(bookName).to_json(orient='table'))['data'])
+# @app.route('/recommend/genre/<string:bookName>/', methods=['GET'])
+def getBooksWithGenre(bookName, start = 0, end = 10):
+    return json.dumps(json.loads(genres_recommendations(bookName).to_json(orient='table'))['data'][start:end])
 
-@app.route('/getBooksByGenre/<string:genre>/start/<int:start>/end/<int:end>', methods=['GET'])
+# @app.route('/getBooksByGenre/<string:genre>/start/<int:start>/end/<int:end>', methods=['GET'])
 def getBooksByGenre(genre, start = 0, end = 10):
     isGenre = books_with_genres['tag_name'] == genre
     return json.dumps(json.loads(books_with_genres[isGenre].to_json(orient='table'))['data'][start:end])
 
+# @app.route('/getBookByTitle/<string:name>', methods=['GET'])
+def getBookByName(name):
+    for book in json.loads(books.to_json(orient='table'))['data']:
+        if str(name).strip().lower() in str(book["title"]).strip().lower():
+            return json.dumps(book)
+    return "{\"title\": \""+ name +"\"}"
+
+@app.route('/book/<string:bookName>', methods=['GET'])
+def getBookDetailsByName(bookName):
+    if session['logged_in']==True:
+        bookDetails = json.loads(getBookByName(bookName))
+
+        if len(bookDetails) == 1:
+            return render_template('book.html', bookDetails = bookDetails, recommendations = {})
+
+        recommendations = []
+
+        genreRecommendations = []
+        booksBasedOnGenre = json.loads(getBooksWithGenre(bookDetails["title"]))
+        for eachBook in booksBasedOnGenre:
+            book = json.loads(getBookByName(eachBook["title"]))
+            if book:
+                genreRecommendations.append(book)
+
+
+        basedOnGenre = json.loads("{\"category\": \"Recommendations based on genres\", \"list\": "+ json.dumps(genreRecommendations) + "}")
+
+
+        authorRecommendations = []
+        booksBasedOnAuthors = json.loads(getBooksWithAuthor(bookDetails["title"]))
+        for eachBook in booksBasedOnAuthors:
+            book = json.loads(getBookByName(eachBook["title"]))
+            if book:
+                authorRecommendations.append(book)
+
+        basedOnAuthors = json.loads("{\"category\": \"Recommendations based on authors\", \"list\": "+ json.dumps(authorRecommendations) + "}")
+
+        recommendations.append(basedOnGenre)
+        recommendations.append(basedOnAuthors)
+
+        print(recommendations)
+
+        return render_template('book.html', bookDetails = bookDetails, recommendations = json.loads(json.dumps(recommendations)))
+    return bookName
+
 @app.route('/', methods=['GET', 'POST'])
 def homepage():
-    if request.method == 'GET':
-        if session['logged_in']==True:
-            recommendationData = []
-            interestedGenres = Interests.query.filter_by(email=session['log_email']).all()[0]
-            
-            
-            genre1Recommendation = json.loads(getBooksByGenre(interestedGenres.genre1.lower()))
-            # print("genre1 = " + interestedGenres.genre1 + "\n\ngenre1Recommendation: " + genre1Recommendation + "\n\n")
-            
-            genre2Recommendation = json.loads(getBooksByGenre(interestedGenres.genre2.lower()))
-            # print("genre2 = " + interestedGenres.genre2 + "\n\ngenre2Recommendation: " + genre2Recommendation + "\n\n")
-            
-            genre3Recommendation = json.loads(getBooksByGenre(interestedGenres.genre3.lower()))
-            # print("genre3 = " + interestedGenres.genre3 + "\n\ngenre3Recommendation: " + genre3Recommendation + "\n\n")
-            
-            genre4Recommendation = json.loads(getBooksByGenre(interestedGenres.genre4.lower()))
-            # print("genre4 = " + interestedGenres.genre4 + "\n\ngenre4Recommendation: " + genre4Recommendation + "\n\n")
-            
-            genre5Recommendation = json.loads(getBooksByGenre(interestedGenres.genre5.lower()))
-            # print("genre5 = " + interestedGenres.genre5 + "\n\ngenre5Recommendation: " + genre5Recommendation + "\n\n")
-            
+    try:
+        if request.method == 'GET':
+            if session['logged_in']==True:
+                recommendationData = []
+                interestedGenres = Interests.query.filter_by(email=session['log_email']).all()[0]
+                
+                
+                genre1Recommendation = json.loads("{\"category\": \"" + interestedGenres.genre1 + "\", \"list\": "+getBooksByGenre(interestedGenres.genre1.lower()) + "}")
+                # print("genre1 = " + interestedGenres.genre1 + "\n\ngenre1Recommendation: " + genre1Recommendation + "\n\n")
+                
+                genre2Recommendation = json.loads("{\"category\": \"" + interestedGenres.genre2 + "\", \"list\": "+getBooksByGenre(interestedGenres.genre2.lower()) + "}")
+                # print("genre2 = " + interestedGenres.genre2 + "\n\ngenre2Recommendation: " + genre2Recommendation + "\n\n")
+                
+                genre3Recommendation = json.loads("{\"category\": \"" + interestedGenres.genre3 + "\", \"list\": "+getBooksByGenre(interestedGenres.genre3.lower()) + "}")
+                # print("genre3 = " + interestedGenres.genre3 + "\n\ngenre3Recommendation: " + genre3Recommendation + "\n\n")
+                
+                genre4Recommendation = json.loads("{\"category\": \"" + interestedGenres.genre4 + "\", \"list\": "+getBooksByGenre(interestedGenres.genre4.lower()) + "}")
+                # print("genre4 = " + interestedGenres.genre4 + "\n\ngenre4Recommendation: " + genre4Recommendation + "\n\n")
+                
+                genre5Recommendation = json.loads("{\"category\": \"" + interestedGenres.genre5 + "\", \"list\": "+getBooksByGenre(interestedGenres.genre5.lower()) + "}")
+                # print("genre5 = " + interestedGenres.genre5 + "\n\ngenre5Recommendation: " + genre5Recommendation + "\n\n")
+                
 
-            recommendationData.append(genre1Recommendation)
-            recommendationData.append(genre2Recommendation)
-            recommendationData.append(genre3Recommendation)
-            recommendationData.append(genre4Recommendation)
-            recommendationData.append(genre5Recommendation)
+                recommendationData.append(genre1Recommendation)
+                recommendationData.append(genre2Recommendation)
+                recommendationData.append(genre3Recommendation)
+                recommendationData.append(genre4Recommendation)
+                recommendationData.append(genre5Recommendation)
 
-        return render_template('homepage.html', recommendationData = recommendationData)
+                return render_template('homepage.html', recommendationData = recommendationData)
+    except:
+        return render_template('homepage.html', recommendationData=[])
     return render_template('homepage.html', recommendationData=[])
 
 # if __name__ == '__main__':
