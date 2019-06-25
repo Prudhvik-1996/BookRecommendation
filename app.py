@@ -105,6 +105,8 @@ def genres_recommendations(title):
 
 # related to database
 class LoginDetails(db.Model):
+    __tablename__ = 'user_details'
+    id = db.Column(db.Integer, autoincrement=True)
     email = db.Column(db.String(100), primary_key=True)
     name = db.Column(db.String(200))
     password = db.Column(db.String(240))
@@ -120,27 +122,47 @@ class LoginDetails(db.Model):
         self.createdAt = createdAt
 
     def __repr__(self):
-        return '<Entry\nEmail Id: %r\nName: %r\nPassword: %r\nPhone number: %r\nCreatedAt: %r>' % (self.email, self.name, self.password, self.phone, self.createdAt)
+        return '<Entry %r\nEmail Id: %r\nName: %r\nPassword: %r\nPhone number: %r\nCreatedAt: %r>' % (self.id, self.email, self.name, self.password, self.phone, self.createdAt)
 
 class Interests(db.Model):
     """docstring for Interests"""
+    __tablename__ = 'user_genre_interests'
+    id = db.Column(db.Integer, autoincrement=True)
     email = db.Column(db.String(100), primary_key=True)
     genre1 = db.Column(db.String(50))
     genre2 = db.Column(db.String(50))
     genre3 = db.Column(db.String(50))
     genre4 = db.Column(db.String(50))
     genre5 = db.Column(db.String(50))
+    lastUpdated = db.Column(DateTime(), default = datetime.datetime.now())
 
-    def __init__(self, email, genre1, genre2, genre3, genre4, genre5):
+    def __init__(self, email, genre1, genre2, genre3, genre4, genre5, lastUpdated = datetime.datetime.now()):
         self.email = email
         self.genre1 = genre1
         self.genre2 = genre2
         self.genre3 = genre3
         self.genre4 = genre4
         self.genre5 = genre5
+        self.lastUpdated = lastUpdated
         
     def __repr__(self):
-        return '<Entry\nEmail Id: %r\nGenre-1:%r\nGenre-2:%r\nGenre-3:%r\nGenre-4:%r\nGenre-5:%r' % (self.email, self.genre1, self.genre2, self.genre3, self.genre4, self.genre5)
+        return '<Entry %r\nEmail Id: %r\nGenre-1:%r\nGenre-2:%r\nGenre-3:%r\nGenre-4:%r\nGenre-5:%r' % (self.id, self.email, self.genre1, self.genre2, self.genre3, self.genre4, self.genre5)
+
+class Favourites(db.Model):
+    id = db.Column(db.Integer, autoincrement=True)
+    email = db.Column(db.String(100), primary_key=True)
+    bookName = db.Column(db.String(400), primary_key=True)
+    isbn = db.Column(db.String(50))
+    lastUpdated = db.Column(DateTime(), default = datetime.datetime.now())
+
+    def __init__(self, email, bookName, isbn, lastUpdated = datetime.datetime.now()):
+        self.email = email
+        self.isbn = isbn
+        self.bookName = bookName
+        self.lastUpdated = lastUpdated
+
+    def __repr__(self):
+        return '<Entry %r\nEmail Id: %r\nBook Name: %r\nISBN: %r\nLast Updated: %r\n>' % (self.id, self.email, self.isbn, self.lastUpdated)
 
 db.create_all()
 
@@ -165,7 +187,7 @@ def checkLastLoggedIn(e):
     newSignIn = datetime.datetime.now()
     timeDiff = newSignIn - details.lastSignIn
 
-    if timeDiff <= datetime.timedelta(1, 0, 0, 0):
+    if timeDiff >= datetime.timedelta(0, 1, 0, 0):
         logout()
 
     return None
@@ -236,7 +258,7 @@ def signup():
     
 @app.route('/yourdetails')
 def yourdetails():
-    checkLastLoggedIn(session['log_email'])
+    # checkLastLoggedIn(session['log_email'])
     try:
         if session['logged_in']==True:
             customer = LoginDetails.query.filter_by(email=session['log_email']).one()
@@ -278,7 +300,7 @@ def getBookByName(name):
 
 @app.route('/book/<string:bookName>', methods=['GET'])
 def getBookDetailsByName(bookName):
-    checkLastLoggedIn(session['log_email'])
+    # checkLastLoggedIn(session['log_email'])
     try:
         if session['logged_in']==True:
             bookDetails = json.loads(getBookByName(bookName))
@@ -308,15 +330,38 @@ def getBookDetailsByName(bookName):
             recommendations.append(basedOnGenre)
             recommendations.append(basedOnAuthors)
 
-            print(recommendations)
+            # print(recommendations)
 
             return render_template('book.html', bookDetails = bookDetails, recommendations = json.loads(json.dumps(recommendations)))
     except:
         return render_template('book.html', bookDetails = json.loads("{\"title\": \""+ bookName +"\"}"), recommendations = json.loads("{}"))
     return bookName
 
+# @app.route('/addToMyList/bookName/<string:bookName>/isbn/<string:isbn>')
+# def addToMyList(bookName, isbn):
+#     try:
+#         newListItem = Favourites(session['log_email'], bookName, isbn)
+#         db.session.add(newListItem)
+#         db.session.commit()
+#         return "Added successfully!!"
+#     except:
+#         return "Coudn't add due to network error!!"
+
+@app.route('/addToMyList/bookName/<string:bookName>/isbn/<string:isbn>')
+def addToMyList(bookName, isbn):
+    try:
+        newListItem = Favourites(session['log_email'], bookName, isbn)
+        db.session.add(newListItem)
+        db.session.commit()
+        return "Added successfully!!"
+    except:
+        return "Coudn't add due to network error!!"
+
+
+
 @app.route('/', methods=['GET', 'POST'])
 def homepage():
+    # checkLastLoggedIn(session['log_email'])
     try:
         if request.method == 'GET':
             if session['logged_in']==True:

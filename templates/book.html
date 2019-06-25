@@ -46,7 +46,23 @@
 		Original Publication Year: {{bookDetails.original_publication_year}}
 	  </div>
 	  <div class="col-sm-2">
-		<button class="button myListButton">+ My List</button>
+
+
+			<button class="button myListButton" id="myListButton">+ My List</button>
+
+			<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+			<script>
+			$(document).ready(function(){
+			  $("button").click(function(){
+			    $.get("http://localhost:5000/addToMyList/bookName/{{bookDetails.original_title}}/isbn/{{bookDetails.isbn}}", function(data, status){
+			      // alert("Data: " + data + "\nStatus: " + status);
+			      if(data === "Added successfully!!"){
+			      	document.getElementById("myListButton").value="Remove from My List";
+			      }
+			    });
+			  });
+			});
+			</script>
 
 		
 	  </div>
