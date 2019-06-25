@@ -158,6 +158,9 @@ def authenticateEmail(e):
     return True
 
 def updateLastLoggedIn(email):
+    
+    # details=LoginDetails.query.filter_by(email=e).all()
+    # if details[0].lastSignIn 
     return None
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -268,40 +271,40 @@ def getBookByName(name):
 
 @app.route('/book/<string:bookName>', methods=['GET'])
 def getBookDetailsByName(bookName):
-    if session['logged_in']==True:
-        bookDetails = json.loads(getBookByName(bookName))
+    try:
+        if session['logged_in']==True:
+            bookDetails = json.loads(getBookByName(bookName))
+            print(bookDetails)
+            recommendations = []
 
-        if len(bookDetails) == 1:
-            return render_template('book.html', bookDetails = bookDetails, recommendations = {})
-
-        recommendations = []
-
-        genreRecommendations = []
-        booksBasedOnGenre = json.loads(getBooksWithGenre(bookDetails["title"]))
-        for eachBook in booksBasedOnGenre:
-            book = json.loads(getBookByName(eachBook["title"]))
-            if book:
-                genreRecommendations.append(book)
+            genreRecommendations = []
+            booksBasedOnGenre = json.loads(getBooksWithGenre(bookDetails["title"]))
+            for eachBook in booksBasedOnGenre:
+                book = json.loads(getBookByName(eachBook["title"]))
+                if book:
+                    genreRecommendations.append(book)
 
 
-        basedOnGenre = json.loads("{\"category\": \"Recommendations based on genres\", \"list\": "+ json.dumps(genreRecommendations) + "}")
+            basedOnGenre = json.loads("{\"category\": \"Recommendations based on genres\", \"list\": "+ json.dumps(genreRecommendations) + "}")
 
 
-        authorRecommendations = []
-        booksBasedOnAuthors = json.loads(getBooksWithAuthor(bookDetails["title"]))
-        for eachBook in booksBasedOnAuthors:
-            book = json.loads(getBookByName(eachBook["title"]))
-            if book:
-                authorRecommendations.append(book)
+            authorRecommendations = []
+            booksBasedOnAuthors = json.loads(getBooksWithAuthor(bookDetails["title"]))
+            for eachBook in booksBasedOnAuthors:
+                book = json.loads(getBookByName(eachBook["title"]))
+                if book:
+                    authorRecommendations.append(book)
 
-        basedOnAuthors = json.loads("{\"category\": \"Recommendations based on authors\", \"list\": "+ json.dumps(authorRecommendations) + "}")
+            basedOnAuthors = json.loads("{\"category\": \"Recommendations based on authors\", \"list\": "+ json.dumps(authorRecommendations) + "}")
 
-        recommendations.append(basedOnGenre)
-        recommendations.append(basedOnAuthors)
+            recommendations.append(basedOnGenre)
+            recommendations.append(basedOnAuthors)
 
-        print(recommendations)
+            print(recommendations)
 
-        return render_template('book.html', bookDetails = bookDetails, recommendations = json.loads(json.dumps(recommendations)))
+            return render_template('book.html', bookDetails = bookDetails, recommendations = json.loads(json.dumps(recommendations)))
+    except:
+        return render_template('book.html', bookDetails = json.loads("{\"title\": \""+ bookName +"\"}"), recommendations = json.loads("{}"))
     return bookName
 
 @app.route('/', methods=['GET', 'POST'])
