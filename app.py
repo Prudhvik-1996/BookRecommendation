@@ -34,26 +34,26 @@ def getCsvFromUrl(url):
     c=pd.read_csv(io.StringIO(s.decode('utf-8')))
     return c
 
-# books = getCsvFromUrl("https://raw.githubusercontent.com/Prudhvik-1996/BookRecommendation/master/books.csv")
-books = pd.read_csv('./data/books.csv', encoding = "ISO-8859-1")
+books = getCsvFromUrl("https://raw.githubusercontent.com/Prudhvik-1996/BookRecommendation/master/data/books.csv")
+# books = pd.read_csv('./data/books.csv', encoding = "ISO-8859-1")
 # print(books.head())
 # print(books.shape)
 # print(books.columns)
 
-# ratings = getCsvFromUrl("https://raw.githubusercontent.com/Prudhvik-1996/BookRecommendation/master/ratings.csv")
-ratings = pd.read_csv('./data/ratings.csv', encoding = "ISO-8859-1")
+ratings = getCsvFromUrl("https://raw.githubusercontent.com/Prudhvik-1996/BookRecommendation/master/data/ratings.csv")
+# ratings = pd.read_csv('./data/ratings.csv', encoding = "ISO-8859-1")
 # print(ratings.head())
 # print(ratings.shape)
 # print(ratings.columns)
 
-# book_tags = getCsvFromUrl("https://raw.githubusercontent.com/Prudhvik-1996/BookRecommendation/master/book_tags.csv")
-book_tags = pd.read_csv('./data/book_tags.csv', encoding = "ISO-8859-1")
+book_tags = getCsvFromUrl("https://raw.githubusercontent.com/Prudhvik-1996/BookRecommendation/master/data/book_tags.csv")
+# book_tags = pd.read_csv('./data/book_tags.csv', encoding = "ISO-8859-1")
 # print(book_tags.head())
 # print(book_tags.shape)
 # print(book_tags.columns)
 
-# tags = getCsvFromUrl("https://raw.githubusercontent.com/Prudhvik-1996/BookRecommendation/master/tags.csv")
-tags = pd.read_csv('./data/tags.csv', encoding = "ISO-8859-1")
+tags = getCsvFromUrl("https://raw.githubusercontent.com/Prudhvik-1996/BookRecommendation/master/data/tags.csv")
+# tags = pd.read_csv('./data/tags.csv', encoding = "ISO-8859-1")
 # print(tags.head())
 # print(tags.shape)
 # print(tags.columns)
@@ -144,7 +144,7 @@ class Interests(db.Model):
         self.genre4 = genre4
         self.genre5 = genre5
         self.lastUpdated = lastUpdated
-        
+
     def __repr__(self):
         return '<Entry %r\nEmail Id: %r\nGenre-1:%r\nGenre-2:%r\nGenre-3:%r\nGenre-4:%r\nGenre-5:%r' % (self.id, self.email, self.genre1, self.genre2, self.genre3, self.genre4, self.genre5)
 
@@ -256,7 +256,7 @@ def signup():
     except:
         return render_template('signup.html', error="")
     return render_template('signup.html', error="")
-    
+
 @app.route('/yourdetails')
 def yourdetails():
     checkLastLoggedIn(session['log_email'])
@@ -338,16 +338,6 @@ def getBookDetailsByName(bookName):
         return render_template('book.html', bookDetails = json.loads("{\"title\": \""+ bookName +"\"}"), recommendations = json.loads("{}"))
     return bookName
 
-# @app.route('/addToMyList/bookName/<string:bookName>/isbn/<string:isbn>')
-# def addToMyList(bookName, isbn):
-#     try:
-#         newListItem = Favourites(session['log_email'], bookName, isbn)
-#         db.session.add(newListItem)
-#         db.session.commit()
-#         return "Added successfully!!"
-#     except:
-#         return "Coudn't add due to network error!!"
-
 @app.route('/addToMyList/bookName/<string:bookName>/isbn/<string:isbn>')
 def addToMyList(bookName, isbn):
     try:
@@ -373,29 +363,29 @@ def isBookInMyList(bookName):
 
 @app.route('/', methods=['GET', 'POST'])
 def homepage():
-    checkLastLoggedIn(session['log_email'])
     try:
+        checkLastLoggedIn(session['log_email'])
         if request.method == 'GET':
             if session['logged_in']==True:
                 recommendationData = []
                 interestedGenres = Interests.query.filter_by(email=session['log_email']).all()[0]
-                
-                
+
+
                 genre1Recommendation = json.loads("{\"category\": \"" + interestedGenres.genre1 + "\", \"list\": "+getBooksByGenre(interestedGenres.genre1.lower()) + "}")
                 # print("genre1 = " + interestedGenres.genre1 + "\n\ngenre1Recommendation: " + genre1Recommendation + "\n\n")
-                
+
                 genre2Recommendation = json.loads("{\"category\": \"" + interestedGenres.genre2 + "\", \"list\": "+getBooksByGenre(interestedGenres.genre2.lower()) + "}")
                 # print("genre2 = " + interestedGenres.genre2 + "\n\ngenre2Recommendation: " + genre2Recommendation + "\n\n")
-                
+
                 genre3Recommendation = json.loads("{\"category\": \"" + interestedGenres.genre3 + "\", \"list\": "+getBooksByGenre(interestedGenres.genre3.lower()) + "}")
                 # print("genre3 = " + interestedGenres.genre3 + "\n\ngenre3Recommendation: " + genre3Recommendation + "\n\n")
-                
+
                 genre4Recommendation = json.loads("{\"category\": \"" + interestedGenres.genre4 + "\", \"list\": "+getBooksByGenre(interestedGenres.genre4.lower()) + "}")
                 # print("genre4 = " + interestedGenres.genre4 + "\n\ngenre4Recommendation: " + genre4Recommendation + "\n\n")
-                
+
                 genre5Recommendation = json.loads("{\"category\": \"" + interestedGenres.genre5 + "\", \"list\": "+getBooksByGenre(interestedGenres.genre5.lower()) + "}")
                 # print("genre5 = " + interestedGenres.genre5 + "\n\ngenre5Recommendation: " + genre5Recommendation + "\n\n")
-                
+
 
                 recommendationData.append(genre1Recommendation)
                 recommendationData.append(genre2Recommendation)
@@ -408,13 +398,14 @@ def homepage():
         return render_template('homepage.html', recommendationData=[])
     return render_template('homepage.html', recommendationData=[])
 
-# if __name__ == '__main__':
-# app.run(debug=True, threaded=True)
-host = "localhost"
-# host = "10.1.134.4"
-# host = "192.168.43.202"
-# host = "10.10.8.106"
-port = 5000
-# socketio.bind((host, port)) 
-app.run(debug=True, host=host, port=port, threaded=True)
-# socketio.run(app, debug=True, host=host, port=port)
+if __name__ == '__main__':
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.run(debug=True, threaded=True)
+# host = "localhost"
+# # host = "10.1.134.4"
+# # host = "192.168.43.202"
+# # host = "10.10.8.106"
+# port = 5000
+# # socketio.bind((host, port))
+# app.run(debug=True, host=host, port=port, threaded=True)
+# # socketio.run(app, debug=True, host=host, port=port)
