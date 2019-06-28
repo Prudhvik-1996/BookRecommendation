@@ -171,6 +171,7 @@ def authenticate(e, p):
     if(len(details)>0):
         if details[0].password==p:
             details[0].lastSignIn = datetime.datetime.now()
+            # print("Updated datetime: " + str(details[0].lastSignIn))
             db.session.commit()
             return ""
         else: return "Incorrect Password"
@@ -187,7 +188,7 @@ def checkLastLoggedIn(e):
     newSignIn = datetime.datetime.now()
     timeDiff = newSignIn - details.lastSignIn
 
-    if timeDiff >= datetime.timedelta(0, 1, 0, 0):
+    if timeDiff.total_seconds() >= 3600:
         logout()
 
     return None
@@ -258,7 +259,7 @@ def signup():
     
 @app.route('/yourdetails')
 def yourdetails():
-    # checkLastLoggedIn(session['log_email'])
+    checkLastLoggedIn(session['log_email'])
     try:
         if session['logged_in']==True:
             customer = LoginDetails.query.filter_by(email=session['log_email']).one()
@@ -300,7 +301,7 @@ def getBookByName(name):
 
 @app.route('/book/<string:bookName>', methods=['GET'])
 def getBookDetailsByName(bookName):
-    # checkLastLoggedIn(session['log_email'])
+    checkLastLoggedIn(session['log_email'])
     try:
         if session['logged_in']==True:
             bookDetails = json.loads(getBookByName(bookName))
@@ -350,18 +351,29 @@ def getBookDetailsByName(bookName):
 @app.route('/addToMyList/bookName/<string:bookName>/isbn/<string:isbn>')
 def addToMyList(bookName, isbn):
     try:
-        newListItem = Favourites(session['log_email'], bookName, isbn)
-        db.session.add(newListItem)
-        db.session.commit()
-        return "Added successfully!!"
+        if not isBookInMyList(bookName):
+            newListItem = Favourites(session['log_email'], bookName, isbn)
+            db.session.add(newListItem)
+            db.session.commit()
+            return "Added successfully!!"
+        else:
+            return "Already in your list"
     except:
         return "Coudn't add due to network error!!"
 
-
+def isBookInMyList(bookName):
+    try:
+        usersFavourites = Favourites.query.filter_by(email=session['log_email']).all()
+        for usersFavourite in usersFavourites:
+            if usersFavourite.bookName == bookName:
+                return True
+        return False
+    except:
+        return False
 
 @app.route('/', methods=['GET', 'POST'])
 def homepage():
-    # checkLastLoggedIn(session['log_email'])
+    checkLastLoggedIn(session['log_email'])
     try:
         if request.method == 'GET':
             if session['logged_in']==True:

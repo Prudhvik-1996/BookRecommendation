@@ -55,7 +55,7 @@
 			$(document).ready(function(){
 			  $("button").click(function(){
 			    $.get("http://localhost:5000/addToMyList/bookName/{{bookDetails.original_title}}/isbn/{{bookDetails.isbn}}", function(data, status){
-			      // alert("Data: " + data + "\nStatus: " + status);
+			      alert("Data: " + data + "\nStatus: " + status);
 			      if(data === "Added successfully!!"){
 			      	document.getElementById("myListButton").value="Remove from My List";
 			      }
